@@ -41,7 +41,6 @@ namespace TwitchXIV
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
         private PluginUI ui;
-        public static TwitchClient WOLClient;
 
         public static bool FirstRun = true;
         public string PreviousWorkingChannel;
@@ -69,14 +68,14 @@ namespace TwitchXIV
             // Load all of our commands
             this.commandManager = new PluginCommandManager<Plugin>(this, commands);
 
-            //        public string Username = "Your twitch.tv username";
+            //public string Username = "Your twitch.tv username";
             //public string ChannelToSend = "Channel to send chat to";
             //public string OAuthCode = "";
             try
             {
                 if (PluginConfig.Username != "Your twitch.tv username" && PluginConfig.OAuthCode.Length == 36)
                 {
-                    Connect();
+                    WOLClient.DoConnect();
                 }
                 else
                 {
@@ -90,135 +89,7 @@ namespace TwitchXIV
             }
         }
 
-        public void Connect()
-        {
-            ConnectionCredentials credentials = new ConnectionCredentials(PluginConfig.Username, PluginConfig.OAuthCode);
-            var clientOptions = new ClientOptions
-            {
-                MessagesAllowedInPeriod = 750,
-                ThrottlingPeriod = TimeSpan.FromSeconds(30)
-            };
-            WebSocketClient customClient = new WebSocketClient(clientOptions);
-            WOLClient = new TwitchClient(customClient);
-            WOLClient.Initialize(credentials, PluginConfig.ChannelToSend);
-            WOLClient.OnLog += Client_OnLog;
-            WOLClient.OnJoinedChannel += Client_OnJoinedChannel;
-            WOLClient.OnLeftChannel += Client_OnLeftChannel;
-            WOLClient.OnMessageSent += Client_OnMessageSent;
-            WOLClient.OnMessageReceived += Client_OnMessageReceived;
-            //WOLClient.OnWhisperReceived += Client_OnWhisperReceived;
-            //WOLClient.OnNewSubscriber += Client_OnNewSubscriber;
-            //WOLClient.OnConnected += Client_OnConnected;
-            WOLClient.Connect();
-        }
-
-        private void Client_OnLog(object sender, OnLogArgs e)
-        {
-            //Filter out all the stuff we don't need to see
-            if (e.Data.StartsWith("Finished channel joining queue.")) { return; }
-            if (e.Data.Contains("@msg-id=msg_channel_suspended"))
-            {
-                //Chat.Print(e.Data);
-                //string Channel = e.Data.Replace("@msg-id=msg_channel_suspended :tmi.twitch.tv NOTICE #", "").Replace(" :This channel does not exist or has been suspended.", "");
-                Chat.Print(Functions.BuildSeString(this.Name, "<c17>Unable <c17>to <c17>join <c575>" + PluginConfig.ChannelToSend + " <c17>channel, <c17>reverting <c17>back <c17>to <c17>your <c17>channel. <c17>Please <c17>check <c17>the <c17>name <c17>and <c17>try <c17>again."));
-                PluginConfig.ChannelToSend = WOLClient.TwitchUsername;
-                WOLClient.JoinChannel(WOLClient.TwitchUsername);
-            }
-            if (e.Data.Contains("Received: @msg-id=") && e.Data.Contains("NOTICE"))
-            {
-                //Chat.Print(e.Data);
-                string Message = Regex.Match(e.Data, PluginConfig.ChannelToSend.ToLower() + " :.*").Value.Replace(PluginConfig.ChannelToSend.ToLower() + " :","");
-                Chat.Print(Functions.BuildSeString(this.Name,Message,ColorType.Info));
-            }
-            if (e.Data.StartsWith("Received:")) { return; }
-            if (e.Data.StartsWith("Writing:")) { return; }
-            if (e.Data.StartsWith("Connecting to")) { return; }
-            if (e.Data.StartsWith("Joining ") || e.Data.StartsWith("Leaving ")) { return; }
-            if (e.Data == "Should be connected!") { Chat.Print(Functions.BuildSeString(this.Name,"Connected to twitch chat", ColorType.Twitch)); return; }
-            if (e.Data == "Disconnect Twitch Chat Client...") { Chat.Print(Functions.BuildSeString(this.Name, "Disconnected from twitch chat", ColorType.Twitch)); return; }
-
-            Chat.Print(Functions.BuildSeString(this.Name, e.Data,ColorType.Twitch));
-        }
-
-        private void Log(string Message)
-        {
-            Chat.Print(Functions.BuildSeString(this.Name, Message));
-            //if (WriteToFile) File.AppendAllText("logs/ThemperorLog.txt", $"[{System.DateTime.Now.ToString("G")}] " + Message + Environment.NewLine);
-        }
-
-        private void Client_OnJoinedChannel(object sender, OnJoinedChannelArgs e)
-        {
-            Log("<c541>Joined <c541>channel <c575>" + e.Channel);
-        }
-
-        private void Client_OnLeftChannel(object sender, OnLeftChannelArgs e)
-        {
-            Log("<c541>Left <c541>channel <c575>" + e.Channel);
-        }
-        private void Client_OnMessageSent(object sender, OnMessageSentArgs e)
-        {
-            string DisplayName = e.SentMessage.DisplayName;
-            if (e.SentMessage.IsModerator) { DisplayName = "" + DisplayName; }
-            Chat.Print(Functions.BuildSeString("<c555>TWXIV", GetUsercolor(WOLClient.TwitchUsername) + DisplayName + ": <c0>" + e.SentMessage.Message.Replace(" ", " <c0>")));
-        }
-        private void Client_OnMessageReceived(object sender, OnMessageReceivedArgs e)
-        {
-            if (!PluginConfig.TwitchEnabled) { return; }
-            string DisplayName = e.ChatMessage.DisplayName;
-            if (e.ChatMessage.IsModerator) { DisplayName = "" + DisplayName; }
-            Chat.Print(Functions.BuildSeString("<c555>TWXIV", GetUsercolor(e.ChatMessage.Username) + DisplayName + ": <c0>" + e.ChatMessage.Message.Replace(" "," <c0>")));
-        }
-
-        private string GetUsercolor(string Username)
-        {
-            try
-            {
-                int ColorNumber;
-                if (Username.Length > 19)
-                {
-                    ColorNumber = Username.Length - 20;
-                }
-                else if (Username.Length > 9)
-                {
-                    ColorNumber = Username.Length - 10;
-                }
-                else
-                {
-                    ColorNumber = Username.Length;
-                }
-
-                switch (ColorNumber)
-                {
-                    case 0:
-                        return "<c518>"; //Red
-                    case 1:
-                        return "<c56>";  //Fushia?
-                    case 2:
-                        return "<c570>"; //Green
-                    case 3:
-                        return "<c14>";  //Dark Red
-                    case 4:
-                        return "<c531>"; //Peach
-                    case 5:
-                        return "<c42>";  //Forest Green
-                    case 6:
-                        return "<c561>"; //Light pink
-                    case 7:
-                        return "<c555>"; //Twitch purple
-                    case 8:
-                        return "<c566>"; //Bright blue
-                    case 9:
-                        return "<c500>"; //Orange
-                    default:
-                        return "<c0>";   //Broken, white
-                }
-            }
-            catch(Exception f)
-            {
-                Chat.PrintError("Something went wrong - " + f.ToString());
-                return "<c0>";
-            }
-        }
+        
 
         [Command("/twitch")]
         [HelpMessage("Shows TwitchXIV configuration options")]
@@ -245,7 +116,7 @@ namespace TwitchXIV
                 Chat.Print(Functions.BuildSeString(this.Name, "Usage: /tw Hey guys, how is the stream going?", ColorType.Warn));
                 return;
             }
-            WOLClient.SendMessage(WOLClient.JoinedChannels.First(), args);
+            WOLClient.Client.SendMessage(WOLClient.Client.JoinedChannels.First(), args);
         }
 
         [Command("/tchannel")]
@@ -260,9 +131,9 @@ namespace TwitchXIV
                     Chat.Print(Functions.BuildSeString(this.Name, "Usage: /tchannel streamer_username\nExample: /tchannel zackrawrr", ColorType.Warn));
                     return;
                 }
-                if (WOLClient.JoinedChannels.Count() > 0) { WOLClient.LeaveChannel(WOLClient.JoinedChannels.First()); }
+                if (WOLClient.Client.JoinedChannels.Count() > 0) { WOLClient.Client.LeaveChannel(WOLClient.Client.JoinedChannels.First()); }
                 PluginConfig.ChannelToSend = args;
-                WOLClient.JoinChannel(args);
+                WOLClient.Client.JoinChannel(args);
             }
             catch(Exception f)
             {
@@ -288,12 +159,12 @@ namespace TwitchXIV
                 ui.IsVisible = !ui.IsVisible;
             };
 
-            if (WOLClient.IsConnected) { WOLClient.Disconnect(); }
-            WOLClient.OnLog -= Client_OnLog;
-            WOLClient.OnJoinedChannel -= Client_OnJoinedChannel;
-            WOLClient.OnLeftChannel -= Client_OnLeftChannel;
-            WOLClient.OnMessageSent -= Client_OnMessageSent;
-            WOLClient.OnMessageReceived -= Client_OnMessageReceived;
+            if (WOLClient.Client.IsConnected) { WOLClient.Client.Disconnect(); }
+            WOLClient.Client.OnLog -= WOLClient.Client_OnLog;
+            WOLClient.Client.OnJoinedChannel -= WOLClient.Client_OnJoinedChannel;
+            WOLClient.Client.OnLeftChannel -= WOLClient.Client_OnLeftChannel;
+            WOLClient.Client.OnMessageSent -= WOLClient.Client_OnMessageSent;
+            WOLClient.Client.OnMessageReceived -= WOLClient.Client_OnMessageReceived;
         }
 
         public void Dispose()
