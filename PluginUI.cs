@@ -38,7 +38,6 @@ namespace TwitchXIV
                 Plugin.PluginConfig.Save();
                 this.IsVisible = false;
                 Plugin.Chat.Print(Functions.BuildSeString("Twitch XIV","<c17>DO <c25>NOT <c37>SHARE <c45>YOUR <c48>OAUTH <c52>CODE <c500>WITH <c579>ANYONE!"));
-                if (WOLClient.Client.IsConnected) { WOLClient.Client.Disconnect(); }
                 WOLClient.DoConnect();
             }
             ImGui.SameLine();
