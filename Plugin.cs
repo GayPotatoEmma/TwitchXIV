@@ -1,23 +1,9 @@
-﻿using Dalamud.Data;
-using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.ClientState.Party;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
+﻿using Dalamud.Game;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using System;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using TwitchLib.Client;
-using TwitchLib.Client.Events;
-using TwitchLib.Client.Models;
-using TwitchLib.Communication.Clients;
-using TwitchLib.Communication.Models;
 using Veda;
 
 namespace TwitchXIV
@@ -27,26 +13,26 @@ namespace TwitchXIV
         public string Name => "Twitch XIV";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
-        [PluginService] public static Dalamud.Game.Framework Framework { get; set; }
-        [PluginService] public static GameGui GameGui { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static KeyState KeyState { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] public static ClientState ClientState { get; set; }
-        [PluginService] public static PartyList PartyList { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ICondition Conditions { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IFramework Framework { get; set; }
+        [PluginService] public static IGameGui GameGui { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IKeyState KeyState { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static IClientState ClientState { get; set; }
+        [PluginService] public static IPartyList PartyList { get; set; }
 
         public static Configuration PluginConfig { get; set; }
-        private PluginCommandManager<Plugin> commandManager;
+        private PluginCommandManager<Plugin> CommandManager;
         private PluginUI ui;
 
         public static bool FirstRun = true;
         public string PreviousWorkingChannel;
         public bool SuccessfullyJoined;
 
-        public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, PartyList partyList, CommandManager commands, SigScanner sigScanner)
+        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             PartyList = partyList;
@@ -54,7 +40,7 @@ namespace TwitchXIV
             SigScanner = sigScanner;
 
             // Get or create a configuration object
-            PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
+            PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
            
             ui = new PluginUI();
@@ -66,7 +52,7 @@ namespace TwitchXIV
             };
 
             // Load all of our commands
-            this.commandManager = new PluginCommandManager<Plugin>(this, commands);
+            CommandManager = new PluginCommandManager<Plugin>(this, commands);
 
             //public string Username = "Your twitch.tv username";
             //public string ChannelToSend = "Channel to send chat to";
@@ -173,7 +159,7 @@ namespace TwitchXIV
         {
             if (!disposing) return;
 
-            this.commandManager.Dispose();
+            CommandManager.Dispose();
 
             PluginInterface.SavePluginConfig(PluginConfig);
 
