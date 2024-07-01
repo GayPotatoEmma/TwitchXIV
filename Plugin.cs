@@ -12,7 +12,7 @@ namespace TwitchXIV
     {
         public string Name => "Twitch XIV";
 
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static ICondition Conditions { get; set; }
         [PluginService] public static IDataManager Data { get; set; }
@@ -32,7 +32,7 @@ namespace TwitchXIV
         public string PreviousWorkingChannel;
         public bool SuccessfullyJoined;
 
-        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
+        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             PartyList = partyList;
