@@ -13,15 +13,8 @@ namespace TwitchXIV
         public string Name => "Twitch XIV";
 
         [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static ICommandManager Commands { get; set; }
-        [PluginService] public static ICondition Conditions { get; set; }
-        [PluginService] public static IDataManager Data { get; set; }
-        [PluginService] public static IFramework Framework { get; set; }
-        [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static ISigScanner SigScanner { get; set; }
-        [PluginService] public static IKeyState KeyState { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
-        [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
 
         public static Configuration PluginConfig { get; set; }
@@ -54,9 +47,6 @@ namespace TwitchXIV
             // Load all of our commands
             CommandManager = new PluginCommandManager<Plugin>(this, commands);
 
-            //public string Username = "Your twitch.tv username";
-            //public string ChannelToSend = "Channel to send chat to";
-            //public string OAuthCode = "";
             try
             {
                 if (PluginConfig.Username != "Your twitch.tv username" && PluginConfig.OAuthCode.Length == 36)

@@ -10,27 +10,6 @@ namespace Veda
 {
     public class Functions
     {
-        public static bool ListContainsPlayer(List<PlayerData> PlayerList, string PlayerName, uint WorldId = 0)
-        {
-            int Result = 0;
-            if (WorldId == 0)
-            {
-                Result = PlayerList.FindIndex(x => x.Name == PlayerName);
-            }
-            else
-            {
-                Result = PlayerList.FindIndex(x => x.Name == PlayerName && x.HomeworldId == WorldId);
-            }
-            if (Result == -1)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
         public static void OpenWebsite(string URL)
         {
             Process.Start(new ProcessStartInfo { FileName = URL, UseShellExecute = true });
