@@ -6,7 +6,7 @@
   "ApplicableVersion": "any",
   "Description": "Allows you to join a Twitch chat and send messages and (optionally) have the twitch chat come through your chatbox.",
   "Punchline": "Sup y'all? It's ya boy, Twitch XIV, and today we're gonna be playing some final fantasy fourteen.",
-  "RepoUrl": "hhttps://github.com/Aida-Enna/TwitchXIV",
+  "RepoUrl": "https://github.com/Aida-Enna/TwitchXIV",
   "Tags": [
     "twitch",
     "aida"
